@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Поздравление</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    #paper {
+      transition: opacity 0.4s ease;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 0;
+
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 12rem;
+      height: 12rem;
+      transform: translate(-50%, -50%);
+    }
+    #paper.visible {
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 20;
+    }
+    .square {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-[200vh] relative overflow-x-hidden" style="background-color: #fbf4e5;">
+
+  <!-- Квадратики будут здесь -->
+  <div id="squares-container"></div>
+
+<div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30" style="width:14rem; height:14rem;">
+    <!-- Бумага -->
+    <div
+      id="paper"
+      class="bg-white border rounded-xl shadow-lg flex flex-col items-center justify-center text-center p-4"
+    >
+      <p class="font-bold text-lg">Поздравляем!</p>
+      <p class="mt-1">Ты на финишной прямой</p>
+      <p class="mt-1">Код:</p>
+      <p class="mt-2 text-2xl">🟥🟦🟪🟩</p>
+    </div>
+
+    <!-- Кнопка -->
+    <button
+      onclick="togglePaper()"
+      class="absolute top-0 left-0 rounded-xl z-10 text-2xl font-bold"
+      style="width:14rem; height:14rem; background-color: #e8ccd7; color: #cd5c5c;"
+    >
+      Почти
+    </button>
+  </div>
+
+  <script>
+    let isVisible = false;
+
+    function togglePaper() {
+      const paper = document.getElementById("paper");
+      if (!isVisible) {
+        paper.classList.add("visible");
+      } else {
+        paper.classList.remove("visible");
+      }
+      isVisible = !isVisible;
+    }
+
+    // Функция для создания квадратиков с рандомной позицией
+    function createSquares() {
+  const container = document.body;
+  const colors = [
+    { color: 'red', count: 8 },
+    { color: 'blue', count: 3 },
+    { color: 'purple', count: 9 },
+    { color: 'green', count: 5 },
+  ];
+
+  const button = document.querySelector("button");
+  const rect = button.getBoundingClientRect();
+
+  // "Запрещённая зона" вокруг кнопки (114px)
+  const safeZone = {
+    left: rect.left - 20,
+    right: rect.right + 20,
+    top: rect.top - 20,
+    bottom: rect.bottom + 20
+  };
+
+  const placedSquares = []; // сюда сохраняем координаты всех размещённых квадратов
+  const squareSize = 20;
+
+  function isOverlapping(x, y) {
+    // Проверка, попадает ли в запрещённую зону кнопки
+    if (
+      x + squareSize > safeZone.left && x < safeZone.right &&
+      y + squareSize > safeZone.top && y < safeZone.bottom
+    ) {
+      return true;
+    }
+
+    // Проверка, перекрывает ли уже размещённые квадраты
+    for (const square of placedSquares) {
+      if (
+        x < square.x + squareSize &&
+        x + squareSize > square.x &&
+        y < square.y + squareSize &&
+        y + squareSize > square.y
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  colors.forEach(({ color, count }) => {
+    for (let i = 0; i < count; i++) {
+      const square = document.createElement('div');
+      square.classList.add('square');
+      square.style.backgroundColor = color;
+
+      let x, y, attempts = 0;
+
+      // Пробуем до 100 раз найти свободное место
+      do {
+        x = Math.random() * (window.innerWidth - squareSize);
+        y = Math.random() * (window.innerHeight / 2) + window.innerHeight / 2;
+        attempts++;
+        if (attempts > 100) break; // аварийный выход
+      } while (isOverlapping(x, y));
+
+      // Если место найдено — добавляем квадрат
+      square.style.left = `${x}px`;
+      square.style.top = `${y}px`;
+      container.appendChild(square);
+
+      placedSquares.push({ x, y });
+    }
+  });
+}
+
+
+
+    // Создать квадратики при загрузке
+let hasGeneratedSquares = false;
+
+function handleScroll() {
+  if (hasGeneratedSquares) return;
+
+  const scrollY = window.scrollY;
+  if (scrollY > 150) {
+    createSquares();
+    hasGeneratedSquares = true;
+    window.removeEventListener('scroll', handleScroll);
+  }
+}
+
+window.addEventListener('scroll', handleScroll);
+  </script>
+</body>
+</html>
